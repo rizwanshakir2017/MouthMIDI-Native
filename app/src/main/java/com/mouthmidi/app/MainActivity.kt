@@ -39,6 +39,8 @@ class MainActivity : AppCompatActivity() {
 
     private var lastMouthHeight = 0f
     private var lastMouthWidth = 0f
+    private var lastHeight13_14 = 0f
+    private var lastHeight0_17 = 0f
     private var frameCount = 0
     private var mpSubmitted = 0
     private var mpErrors = 0
@@ -278,7 +280,8 @@ class MainActivity : AppCompatActivity() {
 
             debugInfo.text =
                 "Landmarks: ${landmarks.size}\n" +
-                "Height: %.4f\n".format(lastMouthHeight) +
+                "H13-14: %.4f\n".format(lastHeight13_14) +
+                "H0-17: %.4f\n".format(lastHeight0_17) +
                 "Width: %.4f\n".format(lastMouthWidth) +
                 "Ratio: %.4f\n".format(if (lastMouthWidth > 0f) lastMouthHeight / lastMouthWidth else 0f) +
 
@@ -302,15 +305,28 @@ class MainActivity : AppCompatActivity() {
         landmarks: List<NormalizedLandmark>
     ): Float {
 
+        Log.d("MOUTH","13=" + landmarks[13].x() + "," + landmarks[13].y())
+
+        val mouthIds = listOf(13,14,61,291,0,17,37,267,78,308,81,311,82,312,87,317)
+        mouthIds.forEach { i ->
+            Log.d("MOUTHMAP", i.toString() + "=" + landmarks[i].x() + "," + landmarks[i].y())
+        }
+
         val upper =
             landmarks[13].y()
+
+        Log.d("MOUTH","14=" + landmarks[14].x() + "," + landmarks[14].y())
 
         val lower =
             landmarks[14].y()
 
 
+        Log.d("MOUTH","61=" + landmarks[61].x() + "," + landmarks[61].y())
+
         val left =
             landmarks[61].x()
+
+        Log.d("MOUTH","291=" + landmarks[291].x() + "," + landmarks[291].y())
 
         val right =
             landmarks[291].x()
@@ -325,6 +341,8 @@ class MainActivity : AppCompatActivity() {
 
         lastMouthHeight = height
         lastMouthWidth = width
+        lastHeight13_14 = kotlin.math.abs(landmarks[14].y() - landmarks[13].y())
+        lastHeight0_17 = kotlin.math.abs(landmarks[17].y() - landmarks[0].y())
 
 
         val normalized =

@@ -41,6 +41,10 @@ class MainActivity : AppCompatActivity() {
     private var lastMouthWidth = 0f
     private var lastHeight13_14 = 0f
     private var lastHeight0_17 = 0f
+    private var p13 = ""
+    private var p14 = ""
+    private var p61 = ""
+    private var p291 = ""
     private var frameCount = 0
     private var mpSubmitted = 0
     private var mpErrors = 0
@@ -285,7 +289,11 @@ class MainActivity : AppCompatActivity() {
                 "Width: %.4f\n".format(lastMouthWidth) +
                 "Ratio: %.4f\n".format(if (lastMouthWidth > 0f) lastMouthHeight / lastMouthWidth else 0f) +
 
-                "CC: ${((mouthOpen * 127f).toInt())}"
+                "CC: ${((mouthOpen * 127f).toInt())}\n" +
+                "13: $p13\n" +
+                "14: $p14\n" +
+                "61: $p61\n" +
+                "291: $p291"
 
 
             val cc =
@@ -312,6 +320,10 @@ class MainActivity : AppCompatActivity() {
             Log.d("MOUTHMAP", i.toString() + "=" + landmarks[i].x() + "," + landmarks[i].y())
         }
 
+        p13 = "%.3f,%.3f".format(landmarks[13].x(), landmarks[13].y())
+        p14 = "%.3f,%.3f".format(landmarks[14].x(), landmarks[14].y())
+        p61 = "%.3f,%.3f".format(landmarks[61].x(), landmarks[61].y())
+        p291 = "%.3f,%.3f".format(landmarks[291].x(), landmarks[291].y())
         val upper =
             landmarks[13].y()
 

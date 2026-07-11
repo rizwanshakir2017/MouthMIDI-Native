@@ -280,6 +280,8 @@ class MainActivity : AppCompatActivity() {
                 "Landmarks: ${landmarks.size}\n" +
                 "Height: %.4f\n".format(lastMouthHeight) +
                 "Width: %.4f\n".format(lastMouthWidth) +
+                "Ratio: %.4f\n".format(if (lastMouthWidth > 0f) lastMouthHeight / lastMouthWidth else 0f) +
+
                 "CC: ${((mouthOpen * 127f).toInt())}"
 
 

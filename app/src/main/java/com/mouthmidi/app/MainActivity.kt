@@ -35,16 +35,14 @@ class MainActivity : AppCompatActivity() {
 
     private var faceLandmarker: FaceLandmarker? = null
 
-    private var minCC = 0
-    private var maxCC = 127
+    private var settings = MouthMidiSettings()
+
     private var frameCount = 0
     private var mpSubmitted = 0
     private var mpErrors = 0
     private var lastMpError = ""
 
     private var lastJawOpen = 0f
-    private var jawClosedCalibration = 0.01f
-    private var jawOpenCalibration = 0.80f
     private var lastCC = 0
 
     private val cameraPermission =
@@ -287,9 +285,9 @@ class MainActivity : AppCompatActivity() {
 
 
               val cc =
-                  (minCC + mouthOpen * (maxCC - minCC))
+                  (settings.minCC + mouthOpen * (settings.maxCC - settings.minCC))
                       .toInt()
-                      .coerceIn(minCC, maxCC)
+                      .coerceIn(settings.minCC, settings.maxCC)
 
 
             updateCC(cc)
@@ -303,11 +301,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun calibrateJaw(value: Float): Float {
 
-        val range = jawOpenCalibration - jawClosedCalibration
+        val range = settings.jawOpenCalibration - settings.jawClosedCalibration
 
         if (range <= 0f) return 0f
 
-        return ((value - jawClosedCalibration) / range)
+        return ((value - settings.jawClosedCalibration) / range)
             .coerceIn(0f, 1f)
     }
 

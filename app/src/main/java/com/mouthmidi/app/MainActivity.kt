@@ -41,6 +41,12 @@ class MainActivity : AppCompatActivity() {
     private var lastMouthWidth = 0f
     private var lastHeight13_14 = 0f
     private var lastHeight0_17 = 0f
+    private var lastJawOpen = 0f
+    private var jawClosedCalibration = 0.01f
+    private var jawOpenCalibration = 0.80f
+    private var lastCC = 0
+    private var minCC = 0
+    private var maxCC = 127
     private var p13 = ""
     private var p14 = ""
     private var p61 = ""
@@ -112,6 +118,7 @@ class MainActivity : AppCompatActivity() {
                 .setBaseOptions(baseOptions)
                 .setRunningMode(RunningMode.LIVE_STREAM)
                 .setNumFaces(1)
+                .setOutputFaceBlendshapes(true)
                 .setMinFaceDetectionConfidence(0.5f)
                 .setMinFacePresenceConfidence(0.5f)
                 .setMinTrackingConfidence(0.5f)
@@ -258,7 +265,7 @@ class MainActivity : AppCompatActivity() {
                 faceStatus.text =
                     "● No Face"
 
-                updateCC(0)
+                updateCC(lastCC)
 
                 return@runOnUiThread
             }
@@ -274,13 +281,19 @@ class MainActivity : AppCompatActivity() {
             Log.d(
                 "MouthMIDI",
                 "LANDMARK_COUNT=" + landmarks.size
-            )
+
+              )
+            result.faceBlendshapes().ifPresent { faces ->
+                if (faces.isNotEmpty()) {
+                    val jaw = faces[0].firstOrNull {
+                        it.categoryName() == "jawOpen"
+                    }
+                    lastJawOpen = jaw?.score() ?: 0f
+                }
+            }
 
 
-            val mouthOpen =
-                calculateMouthOpening(
-                    landmarks
-                )
+              val mouthOpen = calibrateJaw(lastJawOpen)
 
             debugInfo.text =
                 "Landmarks: ${landmarks.size}\n" +
@@ -288,6 +301,7 @@ class MainActivity : AppCompatActivity() {
                 "H0-17: %.4f\n".format(lastHeight0_17) +
                 "Width: %.4f\n".format(lastMouthWidth) +
                 "Ratio: %.4f\n".format(if (lastMouthWidth > 0f) lastMouthHeight / lastMouthWidth else 0f) +
+                "JawOpen: %.4f\n".format(lastJawOpen) +
 
                 "CC: ${((mouthOpen * 127f).toInt())}\n" +
                 "13: $p13\n" +
@@ -296,10 +310,10 @@ class MainActivity : AppCompatActivity() {
                 "291: $p291"
 
 
-            val cc =
-                (mouthOpen * 127f)
-                    .toInt()
-                    .coerceIn(0,127)
+              val cc =
+                  (minCC + mouthOpen * (maxCC - minCC))
+                      .toInt()
+                      .coerceIn(minCC, maxCC)
 
 
             updateCC(cc)
@@ -367,10 +381,23 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    private fun calibrateJaw(value: Float): Float {
+
+        val range = jawOpenCalibration - jawClosedCalibration
+
+        if (range <= 0f) return 0f
+
+        return ((value - jawClosedCalibration) / range)
+            .coerceIn(0f, 1f)
+    }
+
+
 
     private fun updateCC(
         value:Int
     ){
+
+        lastCC = value
 
         ccValue.text =
             value

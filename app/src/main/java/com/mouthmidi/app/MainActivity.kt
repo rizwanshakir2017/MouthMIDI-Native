@@ -35,7 +35,10 @@ class MainActivity : AppCompatActivity() {
 
     private var faceLandmarker: FaceLandmarker? = null
 
-    private var settings = MouthMidiSettings()
+    private lateinit var settings: MouthMidiSettings
+
+    private lateinit var settingsRepository: SettingsRepository
+
 
     private var frameCount = 0
     private var mpSubmitted = 0
@@ -63,10 +66,17 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_main)
 
+        settingsRepository = SettingsRepository(this)
+
+        settings = settingsRepository.load()
+
+
         previewView = findViewById(R.id.cameraPreview)
         faceStatus = findViewById(R.id.faceStatus)
         ccValue = findViewById(R.id.ccValue)
         ccMeter = findViewById(R.id.ccMeter)
+
+
 
         cameraExecutor = Executors.newSingleThreadExecutor()
 

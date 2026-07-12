@@ -31,31 +31,22 @@ class MainActivity : AppCompatActivity() {
     private lateinit var faceStatus: TextView
     private lateinit var ccValue: TextView
     private lateinit var ccMeter: MouthMeterView
-    private lateinit var debugInfo: TextView
 
     private lateinit var cameraExecutor: ExecutorService
 
     private var faceLandmarker: FaceLandmarker? = null
 
-    private var lastMouthHeight = 0f
-    private var lastMouthWidth = 0f
-    private var lastHeight13_14 = 0f
-    private var lastHeight0_17 = 0f
-    private var lastJawOpen = 0f
-    private var jawClosedCalibration = 0.01f
-    private var jawOpenCalibration = 0.80f
-    private var lastCC = 0
     private var minCC = 0
     private var maxCC = 127
-    private var p13 = ""
-    private var p14 = ""
-    private var p61 = ""
-    private var p291 = ""
     private var frameCount = 0
     private var mpSubmitted = 0
     private var mpErrors = 0
     private var lastMpError = ""
 
+    private var lastJawOpen = 0f
+    private var jawClosedCalibration = 0.01f
+    private var jawOpenCalibration = 0.80f
+    private var lastCC = 0
 
     private val cameraPermission =
         registerForActivityResult(
@@ -79,7 +70,6 @@ class MainActivity : AppCompatActivity() {
         faceStatus = findViewById(R.id.faceStatus)
         ccValue = findViewById(R.id.ccValue)
         ccMeter = findViewById(R.id.ccMeter)
-        debugInfo = findViewById(R.id.debugInfo)
 
         cameraExecutor = Executors.newSingleThreadExecutor()
 
@@ -295,19 +285,6 @@ class MainActivity : AppCompatActivity() {
 
               val mouthOpen = calibrateJaw(lastJawOpen)
 
-            debugInfo.text =
-                "Landmarks: ${landmarks.size}\n" +
-                "H13-14: %.4f\n".format(lastHeight13_14) +
-                "H0-17: %.4f\n".format(lastHeight0_17) +
-                "Width: %.4f\n".format(lastMouthWidth) +
-                "Ratio: %.4f\n".format(if (lastMouthWidth > 0f) lastMouthHeight / lastMouthWidth else 0f) +
-                "JawOpen: %.4f\n".format(lastJawOpen) +
-
-                "CC: ${((mouthOpen * 127f).toInt())}\n" +
-                "13: $p13\n" +
-                "14: $p14\n" +
-                "61: $p61\n" +
-                "291: $p291"
 
 
               val cc =
@@ -323,62 +300,6 @@ class MainActivity : AppCompatActivity() {
 
 
 
-    private fun calculateMouthOpening(
-        landmarks: List<NormalizedLandmark>
-    ): Float {
-
-        Log.d("MOUTH","13=" + landmarks[13].x() + "," + landmarks[13].y())
-
-        val mouthIds = listOf(13,14,61,291,0,17,37,267,78,308,81,311,82,312,87,317)
-        mouthIds.forEach { i ->
-            Log.d("MOUTHMAP", i.toString() + "=" + landmarks[i].x() + "," + landmarks[i].y())
-        }
-
-        p13 = "%.3f,%.3f".format(landmarks[13].x(), landmarks[13].y())
-        p14 = "%.3f,%.3f".format(landmarks[14].x(), landmarks[14].y())
-        p61 = "%.3f,%.3f".format(landmarks[61].x(), landmarks[61].y())
-        p291 = "%.3f,%.3f".format(landmarks[291].x(), landmarks[291].y())
-        val upper =
-            landmarks[13].y()
-
-        Log.d("MOUTH","14=" + landmarks[14].x() + "," + landmarks[14].y())
-
-        val lower =
-            landmarks[14].y()
-
-
-        Log.d("MOUTH","61=" + landmarks[61].x() + "," + landmarks[61].y())
-
-        val left =
-            landmarks[61].x()
-
-        Log.d("MOUTH","291=" + landmarks[291].x() + "," + landmarks[291].y())
-
-        val right =
-            landmarks[291].x()
-
-
-        val height =
-            kotlin.math.abs(lower - upper)
-
-        val width =
-            kotlin.math.abs(right - left)
-
-
-        lastMouthHeight = height
-        lastMouthWidth = width
-        lastHeight13_14 = kotlin.math.abs(landmarks[14].y() - landmarks[13].y())
-        lastHeight0_17 = kotlin.math.abs(landmarks[17].y() - landmarks[0].y())
-
-
-        val normalized =
-            ((height - 0.001f) /
-            (0.030f - 0.001f))
-                .coerceIn(0f,1f)
-
-
-        return normalized
-    }
 
 
     private fun calibrateJaw(value: Float): Float {

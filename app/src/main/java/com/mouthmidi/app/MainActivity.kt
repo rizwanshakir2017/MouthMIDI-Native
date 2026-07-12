@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.widget.TextView
+import android.widget.Button
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
@@ -31,6 +32,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var ccValue: TextView
     private lateinit var ccMeter: MouthMeterView
 
+    private lateinit var cameraButton: Button
+    private lateinit var startButton: Button
+
     private lateinit var cameraExecutor: ExecutorService
 
     private var faceLandmarker: FaceLandmarker? = null
@@ -38,6 +42,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var settings: MouthMidiSettings
 
     private lateinit var settingsRepository: SettingsRepository
+
+    private lateinit var midiOutputManager: MidiOutputManager
 
     private lateinit var smoothingProcessor: SmoothingProcessor
 
@@ -49,6 +55,10 @@ class MainActivity : AppCompatActivity() {
 
     private var lastJawOpen = 0f
     private var lastCC = 0
+
+    private var useFrontCamera = true
+
+    private var trackingEnabled = true
 
 
     private val cameraPermission =
@@ -73,6 +83,9 @@ class MainActivity : AppCompatActivity() {
 
         settings = settingsRepository.load()
 
+        midiOutputManager = MidiOutputManager(this)
+        midiOutputManager.connect()
+
         smoothingProcessor = SmoothingProcessor(
             settings.smoothing
         )
@@ -82,6 +95,21 @@ class MainActivity : AppCompatActivity() {
         faceStatus = findViewById(R.id.faceStatus)
         ccValue = findViewById(R.id.ccValue)
         ccMeter = findViewById(R.id.ccMeter)
+
+        cameraButton = findViewById(R.id.cameraButton)
+        startButton = findViewById(R.id.startButton)
+
+        startButton.text = "■"
+
+        cameraButton.setOnClickListener {
+            switchCamera()
+        }
+
+        startButton.setOnClickListener {
+            trackingEnabled = !trackingEnabled
+            startButton.text =
+                if (trackingEnabled) "■" else "▶"
+        }
 
 
 
@@ -187,7 +215,10 @@ class MainActivity : AppCompatActivity() {
 
 
             val cameraSelector =
-                CameraSelector.DEFAULT_FRONT_CAMERA
+                if (useFrontCamera)
+                    CameraSelector.DEFAULT_FRONT_CAMERA
+                else
+                    CameraSelector.DEFAULT_BACK_CAMERA
 
 
             cameraProvider.unbindAll()
@@ -205,6 +236,14 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+
+
+    private fun switchCamera() {
+
+        useFrontCamera = !useFrontCamera
+
+        startCamera()
+    }
 
     private fun processFrame(
         imageProxy: ImageProxy
@@ -310,7 +349,11 @@ class MainActivity : AppCompatActivity() {
                       .coerceIn(settings.minCC, settings.maxCC)
 
 
-            updateCC(cc)
+            if (trackingEnabled) {
+                updateCC(cc)
+            } else {
+                updateCC(lastCC)
+            }
 
         }
     }
@@ -339,6 +382,12 @@ class MainActivity : AppCompatActivity() {
 
         lastCC = value
 
+        midiOutputManager.sendCC(
+            settings.midiChannel,
+            settings.midiCC,
+            value
+        )
+
         ccValue.text =
             value
                 .toString()
@@ -356,6 +405,8 @@ class MainActivity : AppCompatActivity() {
 
         cameraExecutor.shutdown()
 
+
+        midiOutputManager.disconnect()
         faceLandmarker?.close()
     }
 }

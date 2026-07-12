@@ -48,6 +48,8 @@ class MainActivity : AppCompatActivity() {
     private var lastJawOpen = 0f
     private var lastCC = 0
 
+    private var smoothedJawOpen = 0f
+
     private val cameraPermission =
         registerForActivityResult(
             ActivityResultContracts.RequestPermission()
@@ -290,7 +292,10 @@ class MainActivity : AppCompatActivity() {
             }
 
 
-              val mouthOpen = calibrateJaw(lastJawOpen)
+              val mouthOpen =
+                  applySmoothing(
+                      calibrateJaw(lastJawOpen)
+                  )
 
 
 
@@ -308,6 +313,22 @@ class MainActivity : AppCompatActivity() {
 
 
 
+
+
+    private fun applySmoothing(
+        value: Float
+    ): Float {
+
+        if (settings.smoothing <= 0f) {
+            return value
+        }
+
+        smoothedJawOpen +=
+            (value - smoothedJawOpen) *
+            settings.smoothing
+
+        return smoothedJawOpen
+    }
 
     private fun calibrateJaw(value: Float): Float {
 

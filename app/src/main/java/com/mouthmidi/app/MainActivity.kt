@@ -13,7 +13,6 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 
 import com.google.mediapipe.framework.image.MediaImageBuilder
-import com.google.mediapipe.tasks.components.containers.NormalizedLandmark
 import com.google.mediapipe.tasks.core.BaseOptions
 import com.google.mediapipe.tasks.core.Delegate
 import com.google.mediapipe.tasks.core.OutputHandler

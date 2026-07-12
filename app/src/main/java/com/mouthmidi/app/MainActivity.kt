@@ -39,6 +39,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var settingsRepository: SettingsRepository
 
+    private lateinit var smoothingProcessor: SmoothingProcessor
+
 
     private var frameCount = 0
     private var mpSubmitted = 0
@@ -48,7 +50,6 @@ class MainActivity : AppCompatActivity() {
     private var lastJawOpen = 0f
     private var lastCC = 0
 
-    private var smoothedJawOpen = 0f
 
     private val cameraPermission =
         registerForActivityResult(
@@ -71,6 +72,10 @@ class MainActivity : AppCompatActivity() {
         settingsRepository = SettingsRepository(this)
 
         settings = settingsRepository.load()
+
+        smoothingProcessor = SmoothingProcessor(
+            settings.smoothing
+        )
 
 
         previewView = findViewById(R.id.cameraPreview)
@@ -293,9 +298,9 @@ class MainActivity : AppCompatActivity() {
 
 
               val mouthOpen =
-                  applySmoothing(
-                      calibrateJaw(lastJawOpen)
-                  )
+                smoothingProcessor.process(
+                    calibrateJaw(lastJawOpen)
+                )
 
 
 
@@ -315,20 +320,6 @@ class MainActivity : AppCompatActivity() {
 
 
 
-    private fun applySmoothing(
-        value: Float
-    ): Float {
-
-        if (settings.smoothing <= 0f) {
-            return value
-        }
-
-        smoothedJawOpen +=
-            (value - smoothedJawOpen) *
-            settings.smoothing
-
-        return smoothedJawOpen
-    }
 
     private fun calibrateJaw(value: Float): Float {
 
